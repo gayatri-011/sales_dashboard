@@ -55,7 +55,7 @@ st.header("Detailed Visualizations")
 # Divide into 2 columns for better layout
 col_left, col_right = st.columns(2)
 
-# ---- Left Chart (Lead Quality Breakdown) ----
+# ---- Left Chart (Lead Quality Breakdown with dynamic scaling) ----
 with col_left:
     st.subheader("Lead Quality Breakdown (In Progress)")
     
@@ -69,16 +69,20 @@ with col_left:
     )
 
     max_count = lead_quality_progress["Count"].max()
-    y_limit = max_count + 50  # add buffer for labels
+
+    # Calculate upper limit dynamically
+    upper_limit = max_count + (max_count * 0.1)
+    upper_limit = round(upper_limit, -1)  # round to nearest 10 for cleaner axis
 
     fig1, ax1 = plt.subplots(figsize=(5, 3))
     bars = ax1.bar(lead_quality_progress["Lead Quality"], lead_quality_progress["Count"], color="#4682B4")
     ax1.bar_label(bars, padding=3)
     ax1.set_xlabel("Lead Quality Category")
     ax1.set_ylabel("Number of In-Progress Leads")
-    plt.ylim(0, y_limit)
+    plt.ylim(0, upper_limit)
     plt.xticks(rotation=0)
     st.pyplot(fig1)
+
 
 
 # ---- Right Chart (Month-wise Conversion Rate Only) ----
