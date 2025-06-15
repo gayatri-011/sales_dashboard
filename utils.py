@@ -3,13 +3,16 @@ import pandas as pd
 import gspread
 import streamlit as st
 from google.oauth2 import service_account
+import base64
+
+
 
 # Caching data load to reduce API calls
 @st.cache_data(ttl=600)
 def load_data():
     # Load service account credentials from Streamlit secrets
-    credentials_info = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
-    credentials = service_account.Credentials.from_service_account_info(credentials_info)
+    encoded_credentials = st.secrets["GOOGLE_CREDENTIALS_BASE64"]
+    credentials_info = json.loads(base64.b64decode(encoded_credentials).decode('utf-8'))
     client = gspread.authorize(credentials)
 
     # Open your Google Sheet
