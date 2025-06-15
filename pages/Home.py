@@ -65,23 +65,25 @@ with col_left:
     ax1.set_ylabel("Number of In-Progress Leads")
     plt.xticks(rotation=0)
     st.pyplot(fig1)
-
-# ---- Right Chart (Month-wise Progress) ----
+# ---- Right Chart (Month-wise Conversion Rate Only) ----
 with col_right:
-    st.subheader("Month-wise Progress")
-    fig2, ax2 = plt.subplots(figsize=(6, 3))
-    month_pivot.plot(
-        x="Month",
-        kind="bar",
-        stacked=True,
-        color=["#4caf50", "#ff9800", "#f44336"],
-        ax=ax2
-    )
-
-    for container in ax2.containers:
-        ax2.bar_label(container, label_type='center', fontsize=8)
+    st.subheader("Month-wise Conversion Rate")
     
+    # Prepare conversion rate data
+    conversion_rate_df = (
+        df.groupby("Month")
+        .agg(Total=("Stage Group", "count"),
+             Converted=("Stage Group", lambda x: (x == "Converted").sum()))
+    ).reset_index()
+
+    conversion_rate_df["Conversion Rate"] = (conversion_rate_df["Converted"] / conversion_rate_df["Total"]) * 100
+
+    # Plot conversion rate bar chart
+    fig2, ax2 = plt.subplots(figsize=(5, 3))
+    bars = ax2.bar(conversion_rate_df["Month"], conversion_rate_df["Conversion Rate"], color="#4682B4")
+    ax2.bar_label(bars, fmt='%.1f%%', padding=3)
     ax2.set_xlabel("Month")
-    ax2.set_ylabel("Number of Leads")
+    ax2.set_ylabel("Conversion Rate (%)")
+    plt.ylim(0, 100)
     plt.xticks(rotation=0)
     st.pyplot(fig2)
