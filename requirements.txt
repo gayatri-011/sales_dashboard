@@ -1,4 +1,5 @@
 streamlit
-gspread
 pandas
-google-auth
+gspread
+oauth2client
+matplotlib
