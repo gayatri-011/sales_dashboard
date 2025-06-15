@@ -2,24 +2,22 @@ import os
 import pandas as pd
 import gspread
 import json
-import base64
 from string import Template
 from google.oauth2.service_account import Credentials
 
-# ================== Load credentials from Streamlit secrets ==================
-import streamlit as st
+# ================== Load credentials locally ==================
+with open("secrets_local.json", "r") as f:
+    credentials_info = json.load(f)
 
-encoded_credentials = st.secrets["GOOGLE_CREDENTIALS_BASE64"]
-service_account_info = json.loads(base64.b64decode(encoded_credentials).decode('utf-8'))
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-credentials = Credentials.from_service_account_info(service_account_info, scopes=scopes)
+credentials = Credentials.from_service_account_info(credentials_info, scopes=scopes)
 gc = gspread.authorize(credentials)
 
 # ================== Open Spreadsheet ==================
 SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1sjfGn--p6WGLPpsE5TdvNSHiuoFyy7IT6ACwlsRgwgg"
 spreadsheet = gc.open_by_url(SPREADSHEET_URL)
 
-# Read all Cleaned sheets
+# ================== Read all Cleaned sheets ==================
 all_worksheets = spreadsheet.worksheets()
 dataframes = []
 
@@ -31,18 +29,17 @@ for ws in all_worksheets:
 
 df = pd.concat(dataframes, ignore_index=True)
 
-# Load template
+# ================== Load Owner_Template.py ==================
 with open("Owner_Template.py", "r") as f:
     template_content = f.read()
 
-# Create pages directory if not exists
+# ================== Create pages directory if not exists ==================
 if not os.path.exists("pages"):
     os.makedirs("pages")
 
-# Get all unique owners
+# ================== Generate one page per owner ==================
 owners = df["Owner"].dropna().unique()
 
-# Generate one page per owner
 for owner in owners:
     safe_owner = owner.replace(" ", "_").replace("/", "_")
     filename = f"pages/Owner_{safe_owner}.py"
