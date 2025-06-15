@@ -9,12 +9,20 @@ from utils import load_data
 
 st.set_page_config(layout="wide")
 
-# ================== Load credentials ==================
+# ================== Load credentials safely ==================
+
+# Read base64 string directly from secrets
 encoded_credentials = st.secrets["GOOGLE_CREDENTIALS_BASE64"]
-service_account_info = json.loads(base64.b64decode(encoded_credentials).decode('utf-8'))
+
+# Decode and directly load credentials
+service_account_info_str = base64.b64decode(encoded_credentials).decode('utf-8')
+service_account_info = json.loads(service_account_info_str)
+
+# Build credentials
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 credentials = Credentials.from_service_account_info(service_account_info, scopes=scopes)
 gc = gspread.authorize(credentials)
+
 spreadsheet_name = "Project Progress Review"
 spreadsheet = gc.open(spreadsheet_name)
 
