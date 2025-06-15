@@ -17,8 +17,9 @@ scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapi
 credentials = Credentials.from_service_account_info(service_account_info, scopes=scopes)
 gc = gspread.authorize(credentials)
 
-spreadsheet_name = "Project Progress Review"
+spreadsheet_name = "Monthly Analysis and Prediction"
 spreadsheet = gc.open(spreadsheet_name)
+
 
 # ================== Sheet selector ==================
 sheet_list = [ws.title for ws in spreadsheet.worksheets()]
