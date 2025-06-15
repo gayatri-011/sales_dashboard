@@ -2,9 +2,28 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from utils import load_data
+import gspread
+import json
+import base64
+from google.oauth2.service_account import Credentials
 
 st.set_page_config(layout="wide")
-df = load_data()
+
+# ================== Load credentials ==================
+encoded_credentials = st.secrets["GOOGLE_CREDENTIALS_BASE64"]
+service_account_info = json.loads(base64.b64decode(encoded_credentials).decode('utf-8'))
+scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+credentials = Credentials.from_service_account_info(service_account_info, scopes=scopes)
+gc = gspread.authorize(credentials)
+spreadsheet_name = "Project Progress Review"
+spreadsheet = gc.open(spreadsheet_name)
+
+# ================== Sheet selector ==================
+sheet_list = [ws.title for ws in spreadsheet.worksheets()]
+selected_sheet = st.selectbox("Select Sheet", sheet_list)
+
+# ================== Load data ==================
+df = load_data(selected_sheet)
 
 st.title("Company Summary Report")
 
@@ -12,7 +31,7 @@ st.title("Company Summary Report")
 total_leads = len(df)
 converted = len(df[df['Stage Group'] == "Converted"])
 in_progress = len(df[df['Stage Group'] == "In Progress"])
-conversion_rate = (converted / total_leads) * 100
+conversion_rate = (converted / total_leads) * 100 if total_leads > 0 else 0
 
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 kpi1.metric("Total Leads", total_leads)
