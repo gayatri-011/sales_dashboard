@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from utils import load_data
 import gspread
 import json
 import base64
 from google.oauth2.service_account import Credentials
+from utils import load_data
 
 st.set_page_config(layout="wide")
 
