@@ -1,22 +1,21 @@
 import os
 import pandas as pd
 import gspread
+import json
+import base64
 from string import Template
 from google.oauth2.service_account import Credentials
 
-# Google Sheets Auth
-SERVICE_ACCOUNT_FILE = "service_account.json"
+# ================== Load credentials from Streamlit secrets ==================
+import streamlit as st
 
-scope = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
-
-credentials = Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=scope)
+encoded_credentials = st.secrets["GOOGLE_CREDENTIALS_BASE64"]
+service_account_info = json.loads(base64.b64decode(encoded_credentials).decode('utf-8'))
+scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+credentials = Credentials.from_service_account_info(service_account_info, scopes=scopes)
 gc = gspread.authorize(credentials)
 
-# Fetch data from Google Sheet
+# ================== Open Spreadsheet ==================
 SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1sjfGn--p6WGLPpsE5TdvNSHiuoFyy7IT6ACwlsRgwgg"
 spreadsheet = gc.open_by_url(SPREADSHEET_URL)
 
