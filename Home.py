@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import gspread
-import json
-import base64
 from google.oauth2.service_account import Credentials
 from utils import load_data
 
@@ -11,12 +9,8 @@ st.set_page_config(layout="wide")
 
 # ================== Load credentials safely ==================
 
-# Read base64 string directly from secrets
-encoded_credentials = st.secrets["GOOGLE_CREDENTIALS_BASE64"]
-
-# Decode and directly load credentials
-service_account_info_str = base64.b64decode(encoded_credentials).decode('utf-8')
-service_account_info = json.loads(service_account_info_str)
+# Read credentials directly from Streamlit secrets
+service_account_info = st.secrets["GOOGLE_CREDENTIALS"]
 
 # Build credentials
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
