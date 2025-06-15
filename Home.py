@@ -3,32 +3,27 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from utils import load_data
 
-st.set_page_config(page_title="Company Summary Report", layout="wide")
-st.title("📊 Company Summary Report")
-
-# Load data
+st.set_page_config(layout="wide")
 df = load_data()
 
-# -------------------- KPIs SECTION --------------------
-total_leads = len(df)
-converted_leads = len(df[df["Stage Group"] == "Converted"])
-in_progress_leads = len(df[df["Stage Group"] == "In Progress"])
-conversion_rate = round((converted_leads / total_leads) * 100, 1) if total_leads > 0 else 0
+st.title("Company Summary Report")
 
-st.header("Overall KPIs")
+# KPIs
+total_leads = len(df)
+converted = len(df[df['Stage Group'] == "Converted"])
+in_progress = len(df[df['Stage Group'] == "In Progress"])
+conversion_rate = (converted / total_leads) * 100
+
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 kpi1.metric("Total Leads", total_leads)
-kpi2.metric("Converted", converted_leads)
-kpi3.metric("In Progress", in_progress_leads)
-kpi4.metric("Conversion %", f"{conversion_rate}%")
+kpi2.metric("Converted", converted)
+kpi3.metric("In Progress", in_progress)
+kpi4.metric("Conversion %", f"{conversion_rate:.1f}%")
 
-# -------------------- CHARTS SECTION --------------------
-st.header("Detailed Visualizations")
-
-# Use 3 columns for better layout of all charts
+# Split into 3 columns for charts
 col_left, col_mid, col_right = st.columns(3)
 
-# -------- Lead Quality Chart --------
+# LEAD QUALITY CHART
 with col_left:
     st.subheader("Lead Quality Breakdown (In Progress)")
     lead_quality = (
@@ -50,27 +45,28 @@ with col_left:
     plt.xticks(rotation=0)
     st.pyplot(fig1)
 
-# -------- Month-wise Conversion Rate Chart --------
+# MONTH-WISE CONVERSION CHART
 with col_mid:
     st.subheader("Month-wise Conversion Rate")
-    conversion_rate_df = (
-        df.groupby("Month")
+
+    conversion_df = (
+        df.groupby(["Month"])
         .agg(Total=("Stage Group", "count"),
              Converted=("Stage Group", lambda x: (x == "Converted").sum()))
     ).reset_index()
 
-    conversion_rate_df["Conversion Rate"] = (conversion_rate_df["Converted"] / conversion_rate_df["Total"]) * 100
+    conversion_df["Conversion Rate"] = (conversion_df["Converted"] / conversion_df["Total"]) * 100
 
     month_order = ["January", "February", "March", "April", "May", "June",
                    "July", "August", "September", "October", "November", "December"]
-    conversion_rate_df["Month"] = pd.Categorical(conversion_rate_df["Month"], categories=month_order, ordered=True)
-    conversion_rate_df = conversion_rate_df.sort_values("Month")
+    conversion_df["Month"] = pd.Categorical(conversion_df["Month"], categories=month_order, ordered=True)
+    conversion_df = conversion_df.sort_values("Month")
 
-    max_rate = conversion_rate_df["Conversion Rate"].max()
+    max_rate = conversion_df["Conversion Rate"].max()
     upper_limit = max(5, round(max_rate + 1))
 
     fig2, ax2 = plt.subplots(figsize=(4, 3))
-    bars = ax2.bar(conversion_rate_df["Month"], conversion_rate_df["Conversion Rate"], color="#4682B4")
+    bars = ax2.bar(conversion_df["Month"], conversion_df["Conversion Rate"], color="#4682B4")
     ax2.bar_label(bars, fmt='%.1f%%', padding=3)
     ax2.set_xlabel("Month")
     ax2.set_ylabel("Conversion Rate (%)")
@@ -78,9 +74,10 @@ with col_mid:
     plt.xticks(rotation=0)
     st.pyplot(fig2)
 
-# -------- Stagnant Leads Chart --------
+# STAGNANT LEADS CHART
 with col_right:
     st.subheader("Stagnant Leads")
+
     stagnant_counts = {
         "<= 30 days": (df["Days Since Last Update"] <= 30).sum(),
         "> 30 days": (df["Days Since Last Update"] > 30).sum()
