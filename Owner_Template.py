@@ -2,12 +2,31 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from utils import load_data
+import gspread
+import json
+import base64
+from google.oauth2.service_account import Credentials
 
-st.set_page_config(layout="wide")
-df = load_data()
+# ================== Load credentials once ==================
+encoded_credentials = st.secrets["GOOGLE_CREDENTIALS_BASE64"]
+service_account_info = json.loads(base64.b64decode(encoded_credentials).decode('utf-8'))
+scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+credentials = Credentials.from_service_account_info(service_account_info, scopes=scopes)
+gc = gspread.authorize(credentials)
+spreadsheet_name = "Project Progress Review"
+spreadsheet = gc.open(spreadsheet_name)
 
-# Filter for this specific owner
-owner_name = "$owner"
+# ================== Sheet selector ==================
+sheet_list = [ws.title for ws in spreadsheet.worksheets()]
+selected_sheet = st.selectbox("Select Sheet", sheet_list)
+
+# ================== Load data ==================
+df = load_data(selected_sheet)
+
+# ================== Owner selector ==================
+owner_list = df["Owner"].dropna().unique().tolist()
+owner_name = st.selectbox("Select Owner", owner_list)
+
 df = df[df["Owner"] == owner_name]
 
 st.title(f"Report for {owner_name}")
