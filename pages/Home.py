@@ -9,20 +9,22 @@ st.title("📊 Company Summary Report")
 # Load data
 df = load_data()
 
-# -------------------- KPI SECTION --------------------
+# -------------------- KPIs SECTION --------------------
 total_leads = len(df)
 converted_leads = len(df[df["Stage Group"] == "Converted"])
 in_progress_leads = len(df[df["Stage Group"] == "In Progress"])
 conversion_rate = round((converted_leads / total_leads) * 100, 1) if total_leads > 0 else 0
 
 st.header("Overall KPIs")
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Leads", total_leads)
-col2.metric("Converted", converted_leads)
-col3.metric("In Progress", in_progress_leads)
-col4.metric("Conversion %", f"{conversion_rate}%")
+kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+kpi1.metric("Total Leads", total_leads)
+kpi2.metric("Converted", converted_leads)
+kpi3.metric("In Progress", in_progress_leads)
+kpi4.metric("Conversion %", f"{conversion_rate}%")
 
-# -------------------- LEAD QUALITY CHART --------------------
+# -------------------- DATA PREPARATION --------------------
+
+# Lead Quality (In Progress)
 lead_quality_progress = (
     df[df["Stage Group"] == "In Progress"]
     .groupby("Lead Quality")
@@ -31,15 +33,7 @@ lead_quality_progress = (
     .sort_values(by="Count", ascending=False)
 )
 
-st.subheader("📊 Lead Quality Breakdown (In Progress)")
-
-fig1, ax1 = plt.subplots(figsize=(6, 4))
-plt.bar(lead_quality_progress["Lead Quality"], lead_quality_progress["Count"], color="#2196f3")
-plt.ylabel("Count")
-plt.xticks(rotation=0)
-st.pyplot(fig1)
-
-# -------------------- MONTH-WISE PROGRESS CHART --------------------
+# Month-wise Progress
 month_pivot = (
     df.groupby(["Month", "Stage Group"])
     .size()
@@ -55,17 +49,39 @@ month_pivot = month_pivot.rename(
     }
 )
 
-st.subheader("📈 Month-wise Progress")
+# -------------------- CHARTS SECTION --------------------
+st.header("Detailed Visualizations")
 
-fig2, ax2 = plt.subplots(figsize=(8, 5))
-month_pivot.plot(
-    x="Month",
-    kind="bar",
-    stacked=True,
-    color=["#4caf50", "#ff9800", "#f44336"],
-    ax=ax2,
-)
-plt.ylabel("Number of Leads")
-plt.xlabel("Month")
-plt.xticks(rotation=0)
-st.pyplot(fig2)
+# Divide into 2 columns for better layout
+col_left, col_right = st.columns(2)
+
+# ---- Left Chart (Lead Quality Breakdown) ----
+with col_left:
+    st.subheader("Lead Quality Breakdown (In Progress)")
+    fig1, ax1 = plt.subplots(figsize=(5, 3))
+    bars = ax1.bar(lead_quality_progress["Lead Quality"], lead_quality_progress["Count"], color="#2196f3")
+    ax1.bar_label(bars, padding=3)
+    ax1.set_xlabel("Lead Quality Category")
+    ax1.set_ylabel("Number of In-Progress Leads")
+    plt.xticks(rotation=0)
+    st.pyplot(fig1)
+
+# ---- Right Chart (Month-wise Progress) ----
+with col_right:
+    st.subheader("Month-wise Progress")
+    fig2, ax2 = plt.subplots(figsize=(6, 3))
+    month_pivot.plot(
+        x="Month",
+        kind="bar",
+        stacked=True,
+        color=["#4caf50", "#ff9800", "#f44336"],
+        ax=ax2
+    )
+
+    for container in ax2.containers:
+        ax2.bar_label(container, label_type='center', fontsize=8)
+    
+    ax2.set_xlabel("Month")
+    ax2.set_ylabel("Number of Leads")
+    plt.xticks(rotation=0)
+    st.pyplot(fig2)
