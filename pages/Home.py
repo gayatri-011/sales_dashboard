@@ -58,11 +58,25 @@ col_left, col_right = st.columns(2)
 # ---- Left Chart (Lead Quality Breakdown) ----
 with col_left:
     st.subheader("Lead Quality Breakdown (In Progress)")
+    
+    # Prepare data
+    lead_quality_progress = (
+        df[df["Stage Group"] == "In Progress"]
+        .groupby("Lead Quality")
+        .size()
+        .reset_index(name="Count")
+        .sort_values(by="Count", ascending=False)
+    )
+
+    max_count = lead_quality_progress["Count"].max()
+    y_limit = max_count + 50  # add buffer for labels
+
     fig1, ax1 = plt.subplots(figsize=(5, 3))
-    bars = ax1.bar(lead_quality_progress["Lead Quality"], lead_quality_progress["Count"], color="#2196f3")
+    bars = ax1.bar(lead_quality_progress["Lead Quality"], lead_quality_progress["Count"], color="#4682B4")
     ax1.bar_label(bars, padding=3)
     ax1.set_xlabel("Lead Quality Category")
     ax1.set_ylabel("Number of In-Progress Leads")
+    plt.ylim(0, y_limit)
     plt.xticks(rotation=0)
     st.pyplot(fig1)
 
