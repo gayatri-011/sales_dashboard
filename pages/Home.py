@@ -65,6 +65,8 @@ with col_left:
     ax1.set_ylabel("Number of In-Progress Leads")
     plt.xticks(rotation=0)
     st.pyplot(fig1)
+
+
 # ---- Right Chart (Month-wise Conversion Rate Only) ----
 with col_right:
     st.subheader("Month-wise Conversion Rate")
@@ -78,12 +80,23 @@ with col_right:
 
     conversion_rate_df["Conversion Rate"] = (conversion_rate_df["Converted"] / conversion_rate_df["Total"]) * 100
 
+    # Sort months properly (assumes Month is string like "March", "April", etc.)
+    month_order = ["January", "February", "March", "April", "May", "June",
+                   "July", "August", "September", "October", "November", "December"]
+    conversion_rate_df["Month"] = pd.Categorical(conversion_rate_df["Month"], categories=month_order, ordered=True)
+    conversion_rate_df = conversion_rate_df.sort_values("Month")
+
+    # Dynamic Y-axis scaling
+    max_rate = conversion_rate_df["Conversion Rate"].max()
+    upper_limit = max(5, round(max_rate + 1))  # always at least 5%, grows automatically
+
     # Plot conversion rate bar chart
     fig2, ax2 = plt.subplots(figsize=(5, 3))
     bars = ax2.bar(conversion_rate_df["Month"], conversion_rate_df["Conversion Rate"], color="#4682B4")
     ax2.bar_label(bars, fmt='%.1f%%', padding=3)
     ax2.set_xlabel("Month")
     ax2.set_ylabel("Conversion Rate (%)")
-    plt.ylim(0, 100)
+    plt.ylim(0, upper_limit)
     plt.xticks(rotation=0)
     st.pyplot(fig2)
+
