@@ -5,27 +5,22 @@ import streamlit as st
 from google.oauth2 import service_account
 import base64
 
-
-
-# Caching data load to reduce API calls
 @st.cache_data(ttl=600)
-def load_data():
+def load_data(selected_sheet):
     # Load service account credentials from Streamlit secrets
     encoded_credentials = st.secrets["GOOGLE_CREDENTIALS_BASE64"]
     credentials_info = json.loads(base64.b64decode(encoded_credentials).decode('utf-8'))
+    credentials = service_account.Credentials.from_service_account_info(credentials_info)
+    
+    # Authorize gspread
     client = gspread.authorize(credentials)
 
     # Open your Google Sheet
     sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1sjfGn--p6WGLPpsE5TdvNSHiuoFyy7IT6ACwlsRgwgg/edit?usp=sharing")
 
-    # Load both March and April sheets
-    data_apr = sheet.worksheet("Cleaned_April").get_all_records()
-    df_apr = pd.DataFrame(data_apr)
+    # Load selected sheet dynamically
+    worksheet = sheet.worksheet(selected_sheet)
+    data = worksheet.get_all_records()
+    df = pd.DataFrame(data)
 
-    data_mar = sheet.worksheet("Cleaned_March").get_all_records()
-    df_mar = pd.DataFrame(data_mar)
-
-    # Combine both months
-    df_all = pd.concat([df_apr, df_mar], ignore_index=True)
-    
-    return df_all
+    return df
