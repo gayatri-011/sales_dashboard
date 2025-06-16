@@ -1,24 +1,25 @@
 import json
-import pandas as pd
 import gspread
-import streamlit as st
+import pandas as pd
 from google.oauth2 import service_account
 
-@st.cache_data(ttl=600)
-def load_data(selected_sheet):
-    # Load service account credentials directly from Streamlit secrets
-    credentials_info = st.secrets["GOOGLE_CREDENTIALS"]
-    credentials = service_account.Credentials.from_service_account_info(credentials_info)
-    
-    # Authorize gspread
+def load_data(sheet_name):
+    # Load credentials from local file
+    with open('service_account.json') as f:
+        service_account_info = json.load(f)
+
+    scopes = ["https://www.googleapis.com/auth/spreadsheets",
+              "https://www.googleapis.com/auth/drive"]
+
+    credentials = service_account.Credentials.from_service_account_info(
+        service_account_info, scopes=scopes)
+
     client = gspread.authorize(credentials)
 
-    # Open your Google Sheet
+    # Load data from Google Sheet
     sheet = client.open("Monthly Analysis and Prediction")
-
-    # Load selected sheet dynamically
-    worksheet = sheet.worksheet(selected_sheet)
+    worksheet = sheet.worksheet(sheet_name)
     data = worksheet.get_all_records()
     df = pd.DataFrame(data)
-
+    
     return df
