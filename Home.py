@@ -3,30 +3,32 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service_account import Credentials
-from utils import load_data
+import json
 
 st.set_page_config(layout="wide")
 
-# ================== Load credentials safely ==================
+# ================== Load credentials safely (file-based method) ==================
 
-# Read credentials directly from Streamlit secrets
-service_account_info = st.secrets["GOOGLE_CREDENTIALS"]
+# Load credentials from service_account.json file in project directory
+with open('service_account.json') as f:
+    service_account_info = json.load(f)
 
-# Build credentials
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 credentials = Credentials.from_service_account_info(service_account_info, scopes=scopes)
 gc = gspread.authorize(credentials)
 
+# ================== Load spreadsheet ==================
 spreadsheet_name = "Monthly Analysis and Prediction"
 spreadsheet = gc.open(spreadsheet_name)
-
 
 # ================== Sheet selector ==================
 sheet_list = [ws.title for ws in spreadsheet.worksheets()]
 selected_sheet = st.selectbox("Select Sheet", sheet_list)
 
 # ================== Load data ==================
-df = load_data(selected_sheet)
+worksheet = spreadsheet.worksheet(selected_sheet)
+data = worksheet.get_all_records()
+df = pd.DataFrame(data)
 
 st.title("Company Summary Report")
 
